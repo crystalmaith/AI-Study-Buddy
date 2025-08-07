@@ -2,41 +2,64 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Import notebook-style fonts */
+@import url('https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
+/* Notebook Study Buddy Design System */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Notebook paper colors */
+    --background: 40 15% 97%;           /* Warm cream paper */
+    --foreground: 215 25% 15%;          /* Dark ink blue */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* Notebook elements */
+    --card: 42 18% 96%;                 /* Slightly darker paper */
+    --card-foreground: 215 25% 15%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 42 18% 96%;
+    --popover-foreground: 215 25% 15%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Blue ink primary */
+    --primary: 210 85% 55%;             /* Blue ink */
+    --primary-foreground: 40 15% 97%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Pencil gray secondary */
+    --secondary: 210 8% 85%;            /* Light pencil gray */
+    --secondary-foreground: 215 25% 15%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Eraser pink muted */
+    --muted: 340 25% 88%;               /* Soft eraser pink */
+    --muted-foreground: 215 15% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Highlighter yellow accent */
+    --accent: 48 95% 75%;               /* Highlighter yellow */
+    --accent-foreground: 215 25% 15%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Red margin destructive */
+    --destructive: 0 75% 55%;           /* Red margin line */
+    --destructive-foreground: 40 15% 97%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Notebook line borders */
+    --border: 210 20% 82%;              /* Light blue lines */
+    --input: 42 18% 94%;                /* Input background */
+    --ring: 210 85% 55%;                /* Focus ring blue */
 
-    --radius: 0.5rem;
+    /* Rounded notebook corners */
+    --radius: 0.75rem;
+
+    /* Custom notebook variables */
+    --notebook-line: 210 40% 85%;       /* Blue ruled lines */
+    --notebook-margin: 0 75% 55%;       /* Red margin */
+    --notebook-spiral: 210 15% 70%;     /* Spiral binding */
+    --notebook-shadow: 215 25% 15% / 0.1; /* Soft shadow */
+    
+    /* Gradients */
+    --gradient-paper: linear-gradient(135deg, hsl(40 15% 97%), hsl(42 18% 96%));
+    --gradient-sticky: linear-gradient(135deg, hsl(48 95% 75%), hsl(50 90% 70%));
+    
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --bounce-gentle: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
     --sidebar-background: 0 0% 98%;
 
@@ -100,6 +123,141 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-inter;
+    background: var(--gradient-paper);
+    background-attachment: fixed;
+  }
+}
+
+@layer components {
+  /* Notebook paper background with lines */
+  .notebook-paper {
+    @apply relative;
+    background: 
+      repeating-linear-gradient(
+        transparent 0px,
+        transparent 27px,
+        hsl(var(--notebook-line)) 28px,
+        hsl(var(--notebook-line)) 29px
+      ),
+      linear-gradient(
+        90deg,
+        hsl(var(--notebook-margin)) 80px,
+        hsl(var(--notebook-margin)) 82px,
+        transparent 82px
+      ),
+      var(--gradient-paper);
+  }
+
+  /* Spiral binding effect */
+  .spiral-binding::before {
+    content: '';
+    @apply absolute left-0 top-0 bottom-0 w-6;
+    background: repeating-linear-gradient(
+      0deg,
+      hsl(var(--notebook-spiral)) 0px,
+      hsl(var(--notebook-spiral)) 8px,
+      transparent 8px,
+      transparent 16px
+    );
+    border-right: 2px solid hsl(var(--border));
+  }
+
+  /* Torn paper edge effect */
+  .torn-edge {
+    position: relative;
+    clip-path: polygon(
+      0% 0%, 
+      97% 0%, 
+      100% 3%, 
+      98% 7%, 
+      100% 12%, 
+      97% 15%, 
+      100% 20%, 
+      98% 25%, 
+      100% 30%, 
+      97% 35%, 
+      100% 40%, 
+      98% 45%, 
+      100% 50%, 
+      97% 55%, 
+      100% 60%, 
+      98% 65%, 
+      100% 70%, 
+      97% 75%, 
+      100% 80%, 
+      98% 85%, 
+      100% 90%, 
+      97% 95%, 
+      100% 100%, 
+      0% 100%
+    );
+  }
+
+  /* Sticky note styling */
+  .sticky-note {
+    @apply relative;
+    background: var(--gradient-sticky);
+    box-shadow: 
+      0 4px 8px hsl(var(--notebook-shadow)),
+      inset -2px -2px 4px hsl(48 85% 65%);
+    transform: rotate(-1deg);
+    transition: var(--transition-smooth);
+  }
+
+  .sticky-note:hover {
+    transform: rotate(0deg) scale(1.02);
+    box-shadow: 
+      0 6px 12px hsl(var(--notebook-shadow)),
+      inset -2px -2px 4px hsl(48 85% 65%);
+  }
+
+  /* Handwritten doodle elements */
+  .doodle-border {
+    border: 2px solid hsl(var(--primary));
+    border-radius: 15px 25px 20px 30px;
+    position: relative;
+  }
+
+  .doodle-border::before {
+    content: '';
+    @apply absolute -top-1 -left-1 -right-1 -bottom-1;
+    border: 1px solid hsl(var(--primary) / 0.3);
+    border-radius: 20px 30px 25px 35px;
+    pointer-events: none;
+  }
+
+  /* Chat bubble styling */
+  .chat-bubble {
+    @apply relative p-4 rounded-2xl;
+    background: hsl(var(--card));
+    border: 2px solid hsl(var(--border));
+    border-radius: 20px 20px 20px 5px;
+    box-shadow: 0 2px 8px hsl(var(--notebook-shadow));
+  }
+
+  .chat-bubble::after {
+    content: '';
+    @apply absolute -bottom-2 left-4;
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid hsl(var(--card));
+  }
+
+  /* Pencil sketch icons */
+  .sketch-icon {
+    filter: 
+      drop-shadow(1px 1px 0px hsl(var(--primary) / 0.3))
+      drop-shadow(-1px -1px 0px hsl(var(--primary) / 0.1));
+    transition: var(--transition-smooth);
+  }
+
+  .sketch-icon:hover {
+    filter: 
+      drop-shadow(2px 2px 0px hsl(var(--primary) / 0.4))
+      drop-shadow(-1px -1px 0px hsl(var(--primary) / 0.2));
+    transform: rotate(2deg);
   }
 }
