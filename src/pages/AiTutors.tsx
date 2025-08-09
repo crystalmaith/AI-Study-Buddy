@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { DashboardCard } from "@/components/DashboardCard";
 import { useApiKeys } from "@/hooks/useApiKeys";
 import { Link } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 interface Message {
   id: string;
@@ -36,6 +37,8 @@ const AiTutors = () => {
   ]);
 
   const { keys } = useApiKeys();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
   const keyByAI = { deepseek: 'deepseekApiKey', gemini: 'geminiApiKey', llama: 'llamaApiKey' } as const;
   const requiredKey = keyByAI[activeAI];
   const hasKey = Boolean(keys[requiredKey]);
@@ -75,7 +78,7 @@ const AiTutors = () => {
 
   const currentAI = aiPersonalities[activeAI];
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!message.trim()) return;
 
     const newUserMessage: Message = {
@@ -85,10 +88,76 @@ const AiTutors = () => {
       timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, newUserMessage]);
+    setMessages((prev) => [...prev, newUserMessage]);
     setMessage("");
 
-    // Simulate AI response
+    // DeepSeek live response when key is present
+    if (activeAI === "deepseek" && hasKey && keys.deepseekApiKey) {
+      try {
+        setIsLoading(true);
+        const systemPrompt =
+          "You are DeepSeek Scholar, an analytical and thorough AI tutor. Provide step-by-step, clear explanations and cite formulas when helpful. Keep responses concise and focused on learning outcomes.";
+
+        const history = [...messages, newUserMessage].map((m) => ({
+          role: m.sender === "user" ? "user" : "assistant",
+          content: m.content,
+        }));
+
+        const response = await fetch("https://api.deepseek.com/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${keys.deepseekApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "deepseek-chat",
+            messages: [{ role: "system", content: systemPrompt }, ...history],
+            temperature: 0.3,
+          }),
+        });
+
+        if (!response.ok) {
+          const errText = await response.text();
+          throw new Error(`DeepSeek error ${response.status}: ${errText}`);
+        }
+
+        const data: any = await response.json();
+        const content =
+          data?.choices?.[0]?.message?.content ??
+          "Sorry, I couldn't generate a response.";
+
+        const aiResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          content,
+          sender: "ai",
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, aiResponse]);
+      } catch (err: any) {
+        console.error("DeepSeek call failed:", err);
+        toast?.({
+          title: "DeepSeek error",
+          description:
+            err?.message ?? "Unable to get a response. Please check your API key.",
+          variant: "destructive",
+        });
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: (Date.now() + 2).toString(),
+            content:
+              "I ran into an issue reaching the AI service. Please verify your DeepSeek API key and try again.",
+            sender: "ai",
+            timestamp: new Date(),
+          },
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
+    // Fallback: simulated response for other AIs (until wired)
     setTimeout(() => {
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
@@ -96,7 +165,7 @@ const AiTutors = () => {
         sender: "ai",
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, aiResponse]);
+      setMessages((prev) => [...prev, aiResponse]);
     }, 1000);
   };
 
@@ -250,7 +319,7 @@ const AiTutors = () => {
               variant="sticky"
               size="lg"
               className="self-end"
-              disabled={!message.trim()}
+              disabled={!message.trim() || isLoading}
             >
               <Send className="h-4 w-4" />
             </Button>
