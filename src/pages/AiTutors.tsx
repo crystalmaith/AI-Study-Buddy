@@ -13,6 +13,8 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { DashboardCard } from "@/components/DashboardCard";
+import { useApiKeys } from "@/hooks/useApiKeys";
+import { Link } from "react-router-dom";
 
 interface Message {
   id: string;
@@ -32,6 +34,11 @@ const AiTutors = () => {
       timestamp: new Date(),
     }
   ]);
+
+  const { keys } = useApiKeys();
+  const keyByAI = { deepseek: 'deepseekApiKey', gemini: 'geminiApiKey', llama: 'llamaApiKey' } as const;
+  const requiredKey = keyByAI[activeAI];
+  const hasKey = Boolean(keys[requiredKey]);
 
   const aiPersonalities = {
     deepseek: {
@@ -172,6 +179,19 @@ const AiTutors = () => {
               </div>
             </div>
           </div>
+
+          {!hasKey && (
+            <div className="mb-4 p-4 bg-accent/10 rounded-md border border-dashed border-accent">
+              <p className="text-sm font-inter text-accent-foreground">
+                Missing API key for {currentAI.name}. Please add it in Settings to enable real responses.
+              </p>
+              <div className="mt-2">
+                <Button asChild variant="outline" size="sm">
+                  <Link to="/settings">Open Settings</Link>
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Messages Area */}
           <div className="flex-1 bg-card/50 rounded-doodle p-4 mb-4 overflow-y-auto border-2 border-border">

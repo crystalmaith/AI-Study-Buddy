@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { 
   Settings as SettingsIcon, 
   Key, 
@@ -19,9 +19,11 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { DashboardCard } from "@/components/DashboardCard";
 import { useToast } from "@/hooks/use-toast";
+import { useApiKeys } from "@/hooks/useApiKeys";
 
 const Settings = () => {
   const { toast } = useToast();
+  const { keys, setApiKey } = useApiKeys();
   const [showApiKeys, setShowApiKeys] = useState<Record<string, boolean>>({});
   const [settings, setSettings] = useState({
     // API Keys
@@ -44,10 +46,23 @@ const Settings = () => {
     autoGenerateQuizzes: true,
   });
 
+  useEffect(() => {
+    setSettings((prev) => ({
+      ...prev,
+      deepseekApiKey: keys.deepseekApiKey ?? "",
+      geminiApiKey: keys.geminiApiKey ?? "",
+      llamaApiKey: keys.llamaApiKey ?? "",
+    }));
+  }, [keys.deepseekApiKey, keys.geminiApiKey, keys.llamaApiKey]);
+
   const handleSave = () => {
+    setApiKey('deepseekApiKey', settings.deepseekApiKey);
+    setApiKey('geminiApiKey', settings.geminiApiKey);
+    setApiKey('llamaApiKey', settings.llamaApiKey);
+
     toast({
       title: "Settings Saved! ✅",
-      description: "Your preferences have been updated successfully.",
+      description: "Your API keys and preferences were saved locally.",
     });
   };
 
