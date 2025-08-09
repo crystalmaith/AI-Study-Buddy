@@ -1,9 +1,6 @@
 import { 
   BookOpen, 
-  MessageCircle, 
   Upload, 
-  BarChart3, 
-  Settings, 
   Brain,
   FileText,
   Star,
@@ -53,18 +50,6 @@ const navigationItems = [
     url: "/quiz", 
     icon: FileText,
     description: "Practice questions"
-  },
-  { 
-    title: "Progress", 
-    url: "/progress", 
-    icon: BarChart3,
-    description: "Learning analytics"
-  },
-  { 
-    title: "Settings", 
-    url: "/settings", 
-    icon: Settings,
-    description: "Preferences & API keys"
   },
 ];
 
