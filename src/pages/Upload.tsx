@@ -24,6 +24,39 @@ interface UploadedFile {
   progress: number;
 }
 
+const UPLOADS_STORAGE_KEY = "studybuddy:uploads";
+
+type StoredUpload = { id: string; name: string; size: number; type: string };
+
+function readStoredUploads(): StoredUpload[] {
+  try {
+    const raw = localStorage.getItem(UPLOADS_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as StoredUpload[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeStoredUploads(list: StoredUpload[]) {
+  try {
+    localStorage.setItem(UPLOADS_STORAGE_KEY, JSON.stringify(list));
+  } catch {
+    // no-op
+  }
+}
+
+function addStoredUpload(file: StoredUpload) {
+  const list = readStoredUploads();
+  if (!list.find((f) => f.id === file.id)) {
+    writeStoredUploads([...list, file]);
+  }
+}
+
+function removeStoredUpload(id: string) {
+  const list = readStoredUploads();
+  writeStoredUploads(list.filter((f) => f.id !== id));
+}
+
 const Upload = () => {
   const [files, setFiles] = useState<UploadedFile[]>([]);
 
@@ -45,10 +78,12 @@ const Upload = () => {
         setFiles(prev => prev.map(f => {
           if (f.id === file.id) {
             const newProgress = f.progress + Math.random() * 20;
-            if (newProgress >= 100) {
-              clearInterval(interval);
-              return { ...f, progress: 100, status: "completed" };
-            }
+          if (newProgress >= 100) {
+            clearInterval(interval);
+            // Persist completed file to localStorage for Quiz page
+            addStoredUpload({ id: f.id, name: f.name, size: f.size, type: f.type });
+            return { ...f, progress: 100, status: "completed" };
+          }
             return { ...f, progress: newProgress };
           }
           return f;
@@ -68,6 +103,7 @@ const Upload = () => {
   });
 
   const removeFile = (id: string) => {
+    removeStoredUpload(id);
     setFiles(prev => prev.filter(f => f.id !== id));
   };
 

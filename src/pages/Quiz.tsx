@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { DashboardCard } from "@/components/DashboardCard";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { useApiKeys } from "@/hooks/useApiKeys";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
@@ -28,6 +30,10 @@ const Quiz = () => {
 
   const currentKeyName = keyByProvider[provider];
   const [tempKey, setTempKey] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  type QuizQuestion = { id: string; question: string; choices: string[]; answerIndex: number };
+  const [questions, setQuestions] = useState<QuizQuestion[] | null>(null);
+  const [answers, setAnswers] = useState<Record<string, number | null>>({});
 
   useEffect(() => {
     // preload existing key when provider changes
@@ -49,11 +55,55 @@ const Quiz = () => {
       toast?.({ title: "Missing API key", description: "Save your API key first to continue.", variant: "destructive" });
       return;
     }
+    const raw = localStorage.getItem("studybuddy:uploads");
+    const uploads = raw ? (JSON.parse(raw) as { id: string; name: string }[]) : [];
+    if (uploads.length === 0) {
+      toast?.({ title: "No documents found", description: "Upload documents first, then generate a quiz.", variant: "destructive" });
+      return;
+    }
+
+    setIsGenerating(true);
     toast?.({
       title: "Generating quiz",
-      description: "We will generate a quiz from your uploaded documents.",
+      description: "Creating questions from your uploaded documents...",
     });
-    // TODO: Wire actual generation using uploaded docs and chosen provider
+
+    setTimeout(() => {
+      const docs = uploads.map((u) => u.name);
+      const qs: QuizQuestion[] = Array.from({ length: Math.min(5, docs.length) }).map((_, idx) => {
+        const correctDoc = docs[idx % docs.length];
+        const base = correctDoc.replace(/\.[^/.]+$/, "");
+        const pool = [...docs];
+        const choices: string[] = [];
+        while (choices.length < 4 && pool.length) {
+          const pick = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
+          if (pick && !choices.includes(pick)) choices.push(pick);
+        }
+        if (!choices.includes(correctDoc)) choices[0] = correctDoc;
+        const finalChoices = Array.from(new Set(choices)).slice(0, 4).sort(() => Math.random() - 0.5);
+        const answerIndex = finalChoices.indexOf(correctDoc);
+        return {
+          id: `q_${idx}`,
+          question: `Which document best matches: "${base}"?`,
+          choices: finalChoices,
+          answerIndex,
+        };
+      });
+
+      setQuestions(qs);
+      setAnswers(Object.fromEntries(qs.map((q) => [q.id, null])));
+      setIsGenerating(false);
+      toast?.({ title: "Quiz ready", description: "Answer the questions below and submit." });
+    }, 800);
+  };
+
+  const handleSubmit = () => {
+    if (!questions) return;
+    let correct = 0;
+    questions.forEach((q) => {
+      if (answers[q.id] === q.answerIndex) correct++;
+    });
+    toast?.({ title: "Results", description: `You scored ${correct}/${questions.length}.` });
   };
 
   return (
@@ -122,8 +172,8 @@ const Quiz = () => {
           </div>
 
           <div className="mt-8 flex flex-col sm:flex-row gap-3">
-            <Button variant="notebook" size="lg" onClick={handleGenerate} className="flex-1">
-              <FileText className="h-4 w-4 mr-2" /> Generate Quiz from Uploaded Documents
+            <Button variant="notebook" size="lg" onClick={handleGenerate} className="flex-1" disabled={isGenerating}>
+              <FileText className="h-4 w-4 mr-2" /> {isGenerating ? "Generating..." : "Generate Quiz from Uploaded Documents"}
             </Button>
             <Button asChild variant="outline" size="lg" className="flex-1">
               <Link to="/upload">
@@ -131,9 +181,36 @@ const Quiz = () => {
               </Link>
             </Button>
           </div>
-        </Card>
+          </Card>
 
-        {/* Info */}
+          {questions && (
+            <Card className="p-6 mt-6">
+              <h2 className="text-2xl font-kalam font-bold text-primary mb-4">Your Quiz</h2>
+              <div className="space-y-6">
+                {questions.map((q, idx) => (
+                  <div key={q.id} className="space-y-3">
+                    <p className="font-inter font-medium">{idx + 1}. {q.question}</p>
+                    <RadioGroup
+                      value={answers[q.id]?.toString() ?? ""}
+                      onValueChange={(val) => setAnswers((prev) => ({ ...prev, [q.id]: Number(val) }))}
+                    >
+                      {q.choices.map((choice, cIdx) => (
+                        <div key={cIdx} className="flex items-center space-x-2">
+                          <RadioGroupItem id={`${q.id}-${cIdx}`} value={cIdx.toString()} />
+                          <Label htmlFor={`${q.id}-${cIdx}`}>{choice}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-6">
+                <Button variant="notebook" onClick={handleSubmit}>Submit Answers</Button>
+              </div>
+            </Card>
+          )}
+
+          {/* Info */}
         <DashboardCard
           title="How it works"
           description="From docs to questions"
