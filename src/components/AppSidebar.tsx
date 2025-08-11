@@ -1,11 +1,4 @@
-import { 
-  BookOpen, 
-  Upload, 
-  Brain,
-  FileText,
-  Star,
-  Home
-} from "lucide-react";
+import { Brain, FileText, Star } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
 import {
@@ -22,28 +15,10 @@ import {
 
 const navigationItems = [
   { 
-    title: "Dashboard", 
-    url: "/", 
-    icon: Home,
-    description: "Overview & quick access"
-  },
-  { 
     title: "AI Tutors", 
     url: "/ai-tutors", 
     icon: Brain,
     description: "Chat with AI assistants"
-  },
-  { 
-    title: "Upload Documents", 
-    url: "/upload", 
-    icon: Upload,
-    description: "Add study materials"
-  },
-  { 
-    title: "Study Library", 
-    url: "/library", 
-    icon: BookOpen,
-    description: "Saved documents & notes"
   },
   { 
     title: "Quiz Generator", 
@@ -145,7 +120,7 @@ export function AppSidebar() {
           <div className="absolute bottom-6 left-6 right-6">
             <div className="torn-edge bg-accent/10 p-4 text-center">
               <p className="text-xs font-kalam text-muted-foreground">
-                💡 Tip: Upload your notes to get personalized AI tutoring!
+                💡 Tip: Paste text or add a PDF on the Quiz page!
               </p>
             </div>
           </div>

@@ -222,12 +222,12 @@ const AiTutors = () => {
           {/* Quick Actions */}
           <DashboardCard
             title="Quick Start"
-            description="Upload a document to begin personalized tutoring"
+            description="Jump into a quick quiz or ask a question"
             icon={BookOpen}
             variant="doodle"
           >
-            <Button variant="pencil" size="sm" className="w-full">
-              Upload Document
+            <Button asChild variant="pencil" size="sm" className="w-full">
+              <Link to="/quiz">Open Quiz Generator</Link>
             </Button>
           </DashboardCard>
         </div>
